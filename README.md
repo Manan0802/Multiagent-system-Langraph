@@ -87,56 +87,56 @@ flowchart TD
     classDef skipNode fill:#7F8C8D,stroke:#fff,stroke-width:2px,color:#fff,stroke-dasharray: 5 5;
     classDef activeNode fill:#2ECC71,stroke:#fff,stroke-width:2px,color:#fff;
 
-    StartNode([🚀 START]):::startEnd --> InitNode[orchestrator_init]::initNode
+    StartNode([🚀 START]):::startEnd --> InitNode[orchestrator_init]:::initNode
     
-    InitNode --> FetchDS1[fetch_ds1 - Buyer Calls]::workerNode
-    InitNode --> FetchDS2[fetch_ds2 - Custom Specs]::workerNode
-    InitNode --> FetchDS3[fetch_ds3 - Search Intent]::workerNode
-    InitNode --> FetchDS4[fetch_ds4 - Product Fill Rate]::workerNode
-    InitNode --> FetchDS5[fetch_ds5 - Option Market Data]::workerNode
+    InitNode --> FetchDS1[fetch_ds1 - Buyer Calls]:::workerNode
+    InitNode --> FetchDS2[fetch_ds2 - Custom Specs]:::workerNode
+    InitNode --> FetchDS3[fetch_ds3 - Search Intent]:::workerNode
+    InitNode --> FetchDS4[fetch_ds4 - Product Fill Rate]:::workerNode
+    InitNode --> FetchDS5[fetch_ds5 - Option Market Data]:::workerNode
     
-    FetchDS1 --> JoinNode[join_all_sources]::initNode
+    FetchDS1 --> JoinNode[join_all_sources]:::initNode
     FetchDS2 --> JoinNode
     FetchDS3 --> JoinNode
     FetchDS4 --> JoinNode
     FetchDS5 --> JoinNode
     
-    JoinNode --> MasterOrch[master_orchestrator]::orchestratorNode
+    JoinNode --> MasterOrch[master_orchestrator]:::orchestratorNode
     
     %% Master Orchestrator Router Gate 0
     MasterOrch -->|Route Decision| Gate0Router{Gate 0: Web Search?}:::orchestratorNode
-    Gate0Router -->|run = true| Gate0Active[gate_0_web_search]::activeNode
-    Gate0Router -->|run = false| Gate0Skip[skip_web_search]::skipNode
+    Gate0Router -->|run = true| Gate0Active[gate_0_web_search]:::activeNode
+    Gate0Router -->|run = false| Gate0Skip[skip_web_search]:::skipNode
     
     %% Gate 0b Routing
     Gate0Active --> Gate0bRouter{Gate 0b: World Knowledge?}:::orchestratorNode
     Gate0Skip --> Gate0bRouter
-    Gate0bRouter -->|run = true| Gate0bActive[gate_0b_world_knowledge]::activeNode
-    Gate0bRouter -->|run = false| Gate0bSkip[skip_world_knowledge]::skipNode
+    Gate0bRouter -->|run = true| Gate0bActive[gate_0b_world_knowledge]:::activeNode
+    Gate0bRouter -->|run = false| Gate0bSkip[skip_world_knowledge]:::skipNode
     
     %% Gate 1 Routing
     Gate0bActive --> Gate1Router{Gate 1: Missing Spec?}:::orchestratorNode
     Gate0bSkip --> Gate1Router
-    Gate1Router -->|run = true| Gate1Active[gate_1_missing_spec]::activeNode
-    Gate1Router -->|run = false| Gate1Skip[skip_missing_spec]::skipNode
+    Gate1Router -->|run = true| Gate1Active[gate_1_missing_spec]:::activeNode
+    Gate1Router -->|run = false| Gate1Skip[skip_missing_spec]:::skipNode
     
     %% Gate 2 Routing
     Gate1Active --> Gate2Router{Gate 2: Spec Sequencing?}:::orchestratorNode
     Gate1Skip --> Gate2Router
-    Gate2Router -->|run = true| Gate2Active[gate_2_sequencing]::activeNode
-    Gate2Router -->|run = false| Gate2Skip[skip_sequencing]::skipNode
+    Gate2Router -->|run = true| Gate2Active[gate_2_sequencing]:::activeNode
+    Gate2Router -->|run = false| Gate2Skip[skip_sequencing]:::skipNode
     
     %% Gate 3 Routing
     Gate2Active --> Gate3Router{Gate 3: Option Audit?}:::orchestratorNode
     Gate2Skip --> Gate3Router
-    Gate3Router -->|run = true| Gate3Active[gate_3_option]::activeNode
-    Gate3Router -->|run = false| Gate3Skip[skip_option]::skipNode
+    Gate3Router -->|run = true| Gate3Active[gate_3_option]:::activeNode
+    Gate3Router -->|run = false| Gate3Skip[skip_option]:::skipNode
     
     %% Verification & Output
-    Gate3Active --> Gate4Verification[gate_4_post_audit_verification]::activeNode
+    Gate3Active --> Gate4Verification[gate_4_post_audit_verification]:::activeNode
     Gate3Skip --> Gate4Verification
     
-    Gate4Verification --> Assembly[output_assembly]::initNode
+    Gate4Verification --> Assembly[output_assembly]:::initNode
     Assembly --> EndNode([🏁 END]):::startEnd
 ```
 
