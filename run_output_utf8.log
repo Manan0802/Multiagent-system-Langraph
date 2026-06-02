@@ -1,0 +1,30 @@
+﻿Testing with MCAT: 3983, Category: conference tables
+--- Starting Orchestrator for MCAT: 3983 (conference tables) ---
+
+--- Pipeline Thought Stream ---
+[THINKING] Alright, let's take a look at the state of 'conference tables'. I need to audit the existing platform baseline and see where the gaps are.
+[THOUGHT] Initializing deep audit for MCAT 3983 by comparing Seller DS-0 against available buyer signals.
+[THOUGHT] Fetching platform baseline specs (DS-0) for MCAT 3983
+[RESULT] DS-0 platform specs: RICH ù Platform baseline specs loaded
+[THOUGHT] Pinging remaining four data sources in parallel for MCAT 3983
+[RESULT] DS-1 buyer_calls: RICH ù 6 buyer specifications loaded
+[RESULT] DS-2 custom_specs: RICH ù 7 unique custom seller specs found
+[RESULT] DS-3 buyer_search: EMPTY ù no search queries found
+[RESULT] DS-4 fill_rate: RICH ù 27 specs with fill data
+[THINKING] Alright, I'm starting my audit for 'conference tables'. Let's see how the baseline compares to our signal load.
+[THOUGHT] Auditing 8 platform baseline specs against 13 external signals...
+[RESULT] CRITICAL: Master Orchestrator failed or returned invalid JSON.
+[ANOMALY] Error Trace: Invalid Master JSON
+[THOUGHT] DEBUG: Displaying FULL raw response from Gemini 2.5 Pro below:
+|RAW| 
+[STREAM_ERROR] 401 Client Error: Unauthorized for url: https://imllm.intermesh.net/v1/chat/completions
+[SKIP] web_search (Gate 0) ù External supplement not needed.
+[SKIP] world_knowledge (Gate 0b) ù No conflicts detected.
+[SKIP] missing_spec_agent (Gate 1) ù no buyer signal and no world knowledge fallback available.
+[SKIP] sequencing_agent (Gate 2) ù fewer than 2 real signals. Rankings would be unreliable.
+[SKIP] option_agent (Gate 3) ù no specs with options found to evaluate.
+
+--- TEST COMPLETED ---
+Summary: Execution pipeline completed. Master Orchestrator guided the intelligence flow.
+Confidence: LOW
+Anomalies: ['PARSING_FAILURE: Invalid Master JSON']

@@ -1,0 +1,6 @@
+requests
+pandas
+langgraph
+langchain-core
+python-dotenv
+streamlit

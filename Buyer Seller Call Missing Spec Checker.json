@@ -1,0 +1,1668 @@
+{
+  "name": "Buyer Seller Call Missing Spec Checker",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        1328,
+        320
+      ],
+      "id": "dc2e2d76-72bd-4df9-af39-36edd2639c82",
+      "name": "Extract from File1",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -880,
+        336
+      ],
+      "id": "65977899-b19d-4b04-aa8a-e176a63792e2",
+      "name": "manual trigger"
+    },
+    {
+      "parameters": {
+        "url": "=https://get-presigned-url-for-mcat-w2yrp7i6za-el.a.run.app/?mcat_id={{ $json.mcat_id }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -176,
+        352
+      ],
+      "id": "79e61ced-c201-414f-88f1-45f5d59fd42f",
+      "name": "seller api",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "google/gemini-2.5-flash",
+          "mode": "list",
+          "cachedResultName": "google/gemini-2.5-flash"
+        },
+        "builtInTools": {},
+        "options": {
+          "timeout": 180000
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        2464,
+        512
+      ],
+      "id": "db425bb0-c1c5-4e7b-89a4-ed0bc361daf1",
+      "name": "OpenAI Chat Model4",
+      "retryOnFail": true,
+      "credentials": {
+        "openAiApi": {
+          "id": "UZ5BfRnTppxhBHXI",
+          "name": "OpenAi account 400"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1cFA7xlxoSrb-2YxUzKRoMn8PDCs0eT0UMmphM4-4Qu0",
+          "mode": "list",
+          "cachedResultName": "Missing Checker Sheet",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1cFA7xlxoSrb-2YxUzKRoMn8PDCs0eT0UMmphM4-4Qu0/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 638205701,
+          "mode": "list",
+          "cachedResultName": "Copy of Output Sheet",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1cFA7xlxoSrb-2YxUzKRoMn8PDCs0eT0UMmphM4-4Qu0/edit#gid=638205701"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "category",
+              "displayName": "category",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "spec_name",
+              "displayName": "spec_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "total_product_count",
+              "displayName": "total_product_count",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "example_values",
+              "displayName": "example_values",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "reason",
+              "displayName": "reason",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "mcat_id",
+              "displayName": "mcat_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        3856,
+        256
+      ],
+      "id": "0f647ac6-61ab-47a9-bd63-e558497ef343",
+      "name": "Append row in sheet1",
+      "retryOnFail": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "w2cXsr3Q4muTWk3H",
+          "name": "Google Sheets account 257"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const buyer = $json; // current item from Top 6 Specs\nconst mcatId = buyer.mcat_id;\n\n// find matching seller record\nconst seller = $items(\"Seller Specs Simplified\")\n  .map(i => i.json)\n  .find(s => s.mcat_id === mcatId);\n\nreturn [{\n  json: {\n    mcat_id: mcatId,\n    category: seller?.category,\n    platform_specs: seller?.platform_specs,\n    buyer_specs: buyer.buyer_specs\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2240,
+        320
+      ],
+      "id": "aeb688bc-d872-484a-9c2b-78b34d96e1c5",
+      "name": "Pre LLM",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "=1cFA7xlxoSrb-2YxUzKRoMn8PDCs0eT0UMmphM4-4Qu0",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1773005933,
+          "mode": "list",
+          "cachedResultName": "Date Sheet 2",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1cFA7xlxoSrb-2YxUzKRoMn8PDCs0eT0UMmphM4-4Qu0/edit#gid=1773005933"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Missing Checker": "Done",
+            "mcat_id": "={{ $json.mcat_id }}"
+          },
+          "matchingColumns": [
+            "mcat_id"
+          ],
+          "schema": [
+            {
+              "id": "mcat_id",
+              "displayName": "mcat_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "mcat_name",
+              "displayName": "mcat_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "pmcat_id",
+              "displayName": "pmcat_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "pmcat_name",
+              "displayName": "pmcat_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Group",
+              "displayName": "Group",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Missing Checker",
+              "displayName": "Missing Checker",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Addition",
+              "displayName": "Addition",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Sequence Checker",
+              "displayName": "Sequence Checker",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Sequence Addition",
+              "displayName": "Sequence Addition",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Comment",
+              "displayName": "Comment",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Config Fill Rate -Paid User",
+              "displayName": "Config Fill Rate -Paid User",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Prod Added- Paid User",
+              "displayName": "Prod Added- Paid User",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Config Fill Rate-Paid Overall",
+              "displayName": "Config Fill Rate-Paid Overall",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Prod Added-Paid Overall",
+              "displayName": "Prod Added-Paid Overall",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1440,
+        640
+      ],
+      "id": "ccd82c8f-a2c5-4d25-b340-0b9dfc1fccdb",
+      "name": "Update row in sheet",
+      "retryOnFail": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "w2cXsr3Q4muTWk3H",
+          "name": "Google Sheets account 257"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const specs = [];\n\nconst input = items[0].json;\nconst fs = input.finalized_specs;\n\n// Collect specs\nfs.finalized_primary_specs.specs.forEach(s => {\n  if (s.options) {\n    specs.push({\n      spec_name: s.spec_name,\n      examples: s.options.slice(0, 6)\n    });\n  }\n});\n\nfs.finalized_secondary_specs.specs.forEach(s => {\n  if (s.options) {\n    specs.push({\n      spec_name: s.spec_name,\n      examples: s.options.slice(0, 6)\n    });\n  }\n});\n\nfs.finalized_tertiary_specs.specs.forEach(s => {\n  if (s.options) {\n    specs.push({\n      spec_name: s.spec_name,\n      examples: s.options.slice(0, 6)\n    });\n  }\n});\n\n// Return output\nreturn [{\n  json: {\n    mcat_id: input.mcat_id,\n    category: input.category_name,\n    platform_specs: specs\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        480,
+        336
+      ],
+      "id": "0510d8bb-5f20-4b80-9e27-fb1ca5c4c968",
+      "name": "Seller Specs Simplified",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.finalized_spec_url }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        256,
+        336
+      ],
+      "id": "fab07303-b1d1-4926-837a-0648c5bbd403",
+      "name": "Seller Specs",
+      "retryOnFail": true,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = items[0]?.json?.output;\n\nconst category = $node[\"Pre LLM\"].json.category;\n\nif (!raw || typeof raw !== \"string\") {\n  throw new Error(\"LLM output is missing or not a string\");\n}\n\n// Remove markdown code fences if present\nconst cleaned = raw\n  .replace(/```json/gi, \"\")\n  .replace(/```/g, \"\")\n  .trim();\n\n// Parse JSON\nlet parsed;\ntry {\n  parsed = JSON.parse(cleaned);\n} catch (err) {\n  throw new Error(\n    \"Failed to parse LLM output as JSON.\\nRaw output:\\n\" + cleaned\n  );\n}\n\n// Return structured JSON with category included\nreturn [\n  {\n    json: {\n      category_name: category,\n      ...parsed\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2816,
+        320
+      ],
+      "id": "d1c79867-5dcf-47d5-980b-2cb64706661e",
+      "name": "Missing Specs",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Input: $json is each item returned by Fetch Spec / normalizer\n// Output: { mcat_id, finalized_spec_url }\n\nconst out = [];\nconst item = $json; // current batch item\n\n// helper to safely read nested path\nfunction get(obj, path, def = undefined) {\n  return path.split('.').reduce((a, b) => (a && a[b] !== undefined) ? a[b] : def, obj);\n}\n\nconst mcat_id = item.mcat_id || get(item, 'mcatId') || null;\n\n// Try the canonical path: finalized_specs.file_info.url\nlet url = get(item, 'finalized_specs.file_info.url');\n\n// fallback: sometimes file_info might be array, or finalized_specs may be null\nif (!url) {\n  // case: finalized_specs.file_info could be an array\n  const fileInfo = get(item, 'finalized_specs.file_info');\n  if (Array.isArray(fileInfo) && fileInfo.length > 0) {\n    url = fileInfo[0].url || fileInfo[0].download_url || null;\n  }\n}\n\n// ultimate fallback: search object for any https://storage.googleapis.com/... occurrence\nif (!url) {\n  const jsonStr = JSON.stringify(item);\n  const m = jsonStr.match(/https:\\/\\/storage\\.googleapis\\.com\\/[^\\s\"']+/);\n  if (m) url = m[0];\n}\n\nreturn [{ json: { mcat_id, finalized_spec_url: url || null } }];\nadr-wsbu-ocm"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        80,
+        336
+      ],
+      "id": "2dc577c5-c7d4-4010-ad17-c42af6650a28",
+      "name": "Spec URL",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const buyerSpecs = items[0].json.buyer_specs;\n\n// Keep specs where product count > 2 and sort descending\nconst validSpecs = buyerSpecs\n  .filter(s => Number(s.total_product_count) > 2)\n  .sort((a, b) => Number(b.total_product_count) - Number(a.total_product_count));\n\nreturn [{\n  json: {\n    buyer_specs: validSpecs\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1824,
+        320
+      ],
+      "id": "b63115f3-ca30-461c-b20a-b28d0ce80fe1",
+      "name": "Top 6 Specs",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "for (const item of $input.all()) {\n  const data = item.json;\n\n  let targetFile = null;\n\n  // 1️⃣ Try Primary File (step_11_normalizer_output)\n  if (\n    data.steps &&\n    data.steps.step_11_normalizer_output &&\n    data.steps.step_11_normalizer_output.root_files\n  ) {\n    targetFile = data.steps.step_11_normalizer_output.root_files.find(\n      file => file.filename === \"updated_spec_value_counts_cumulative.csv\"\n    );\n  }\n\n  // 2️⃣ If not found, try fallback in normalization.final_stats\n  if (\n    !targetFile &&\n    data.normalization &&\n    data.normalization.final_stats\n  ) {\n    targetFile = data.normalization.final_stats.find(\n      file => file.filename === \"final_spec_value_counts_cumulative.csv\"\n    );\n  }\n\n  // 3️⃣ Return result\n  if (targetFile) {\n    item.json = {\n      target_url: targetFile.url,\n      filename: targetFile.filename\n    };\n  } else {\n    item.json = {\n      error: \"Neither updated_spec_value_counts_cumulative.csv nor final_spec_value_counts_cumulative.csv found\"\n    };\n  }\n}\n\nreturn $input.all();\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        928,
+        320
+      ],
+      "id": "9545138e-bc76-42a3-b9f6-8139b22e0626",
+      "name": "Buyer Seller Call Data URL",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "url": "=https://get-buyer-isq-details-w2yrp7i6za-el.a.run.app/?mcat_id={{$json.mcat_id}}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        704,
+        336
+      ],
+      "id": "de2a53a0-57ee-4c77-8156-b68033954262",
+      "name": "Buyer Seller Call Data API",
+      "retryOnFail": false,
+      "alwaysOutputData": false,
+      "notesInFlow": false,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.target_url }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1152,
+        192
+      ],
+      "id": "f0bfef8b-5846-4ab5-8b18-e45970487bdd",
+      "name": "Buyer Seller Call Data CSV",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=ROLE:\nYou are a senior product catalog specialist for a B2B Indian Marketplace with deep expertise in industrial goods, agricultural commodities, food products, spices, metals, chemicals, textiles, and manufactured goods. Your sole responsibility is to determine which buyer-discussed specs are genuinely absent from the platform's existing spec set — with zero tolerance for false positives.\n\n---\n\nGOLDEN RULE:\nWhen in doubt, REJECT. It is far better to miss a genuinely new spec than to flag a duplicate as new. A false \"new\" corrupts the catalog. A false \"covered\" is safe and recoverable.\n\n---\n\nINPUT:\nCategory: {{ $json.category }}\n\nPlatform specs (currently supported on platform):\n{{ JSON.stringify($json.platform_specs, null, 2) }}\n\nBuyer specs (from seller-buyer calls, sorted by total_product_count descending):\n{{ JSON.stringify($json.buyer_specs.slice().sort((a,b) => Number(b.total_product_count) - Number(a.total_product_count)), null, 2) }}\n\n---\n\nTASK:\nFor each buyer spec, determine whether it is genuinely NEW and completely uncovered by any platform spec — directly, indirectly, semantically, or structurally. Only specs that survive all four elimination steps below should appear in output.\n\n---\n\nSTEP 1 — SEMANTIC MATCH CHECK\nAsk: \"Does any platform spec capture the same real-world physical or functional property as this buyer spec — regardless of what it is called?\"\n\nCompare by meaning and function only. Name differences are irrelevant. If the underlying property is the same → REJECT immediately.\n\nGENERIC EQUIVALENCES (apply across all categories):\n· Application = Usage = End Use = Use Case = Intended Use = Purpose\n· Finish = Surface Finish = Coating = Treatment = Plating = Polish\n· Type = Product Type = Variant = Form = Format = Category = Kind\n· Size = Dimensions = Measurement \n· Capacity = Volume = Tank Size = Storage Capacity = Output Capacity\n· Speed = RPM = Rotation Speed = Operating Speed\n· Power = Wattage = Power Rating = Power Consumption = Power Output\n· Origin = Source = Place of Origin = Growing Region = Manufacturing Location = Made In\n· Purity = Concentration = Strength = Potency = Active Content \n· Shelf Life = Expiry = Best Before = Storage Life = Validity\n· Weight = Mass = Net Weight = Gross Weight\n· Color = Colour = Shade = Hue = Tint\n· Certifications = Standards = Compliance = Approvals = Quality Marks\n· Packaging = Pack Type = Pack Size = Packing = Pack Form\n· Brand = Manufacturer = Make = OEM\n\nDOMAIN-SPECIFIC EQUIVALENCES:\n\n[Spices, Chilli, Pepper, Condiments, Masala]\n· Heat Level = Spiciness = Pungency = Hotness = SHU = Scoville = Scoville Heat Units = Chilli Strength\n· Color = Colour = Redness = ASTA Value = Chilli Color Value = Color Value\n· Moisture = Moisture Content = Water Content = Humidity Level = MC\n· Oleoresin = Oleoresin Content = Oil Content = Capsaicin Content = Essential Oil Content\n· Variety = Cultivar = Species = Type (for named varieties: Kashmiri, Byadgi, Teja, Guntur, S4, Wrinkled)\n\n[Agricultural Commodities, Grains, Pulses, Seeds, Oilseeds]\n· Moisture = Moisture Content = Water Activity = MC\n· Purity = Admixture = Foreign Matter = Sortex Grade = Clean\n· Broken = Broken Grains = Broken Percentage = Damage = Damaged Grains\n· Bold = Bold Grains = Grain Size = Grain Count = Per 100g Count\n· Season = Crop = Crop Year = Harvest Year = New Season = Old Season\n· Origin = Growing Region = State of Origin = District\n· Oil Content = Fat Content = Crude Fat = Extractable Oil\n\n[Metals, Steel, Pipes, Fasteners, Hardware]\n· Grade = IS Grade = ASTM Grade = Material Grade = Alloy Grade = EN Grade\n· Tensile = Tensile Strength = UTS = Ultimate Tensile Strength\n· Hardness = BHN = Rockwell = Vickers Hardness = Shore Hardness\n· Thickness = Gauge = Wall Thickness = Sheet Thickness = Plate Thickness\n· Finish = Mill Finish = Surface Finish = Polish \n\n[Chemicals, Pharma, Dyes, Raw Materials]\n· Purity = Assay = Active Content = Concentration \n· Appearance = Form = Physical State = State\n· Solubility = Dissolution = Water Solubility = Miscibility\n\n[Textiles, Fabric, Yarn, Fiber]\n· Count = Yarn Count = Thread Count = Ne Count \n· GSM = Weight = Fabric Weight = Grams per Square Meter\n\n\n[Electrical, Electronics, Cables, Wires]\n· Voltage = Rated Voltage = Operating Voltage = Working Voltage\n· Current = Amperage = Current Rating = Ampere Rating\n\n\n[Machinery, Pumps, Motors, Equipment]\n· Power = HP = Horsepower = KW = Kilowatt = Motor Power = Engine Power\n· Flow Rate = Discharge = Pump Capacity = Output = LPH = LPM = GPH = GPM\n· Head = Pressure Head = Total Head = Delivery Head\n· Phase = Single Phase = Three Phase = 1Ph = 3Ph\n\n[Packaging, Containers, Bags, Drums]\n· Capacity = Volume = Size = Litre = Kg Capacity = Load Capacity\n· Material = Construction Material = Body Material = Made Of\n· Closure = Lid = Cap Type = Seal Type\n\nRULE: If a semantic or domain match exists in either table → REJECT. Move to next buyer spec.\n\n---\n\n**STEP 2 — Example Value Coverage Check**\nAsk: \"Can ≥80% of the buyer's example values be answered using an existing platform spec?\"\n- If yes → the buyer spec is functionally covered → REJECT it.\n- Example: Buyer spec \"Wire Gauge\" with values [\"18 AWG\", \"20 AWG\", \"22 AWG\"] maps cleanly to platform spec \"Gauge\" → REJECT.\n- Do NOT fixate on outlier values. The majority determines the decision.\n\n\nRULE: If values are 80%+ covered by any platform spec → REJECT.\n\n---\n\nSTEP 3 — COMPOSITE AND COMPONENT CHECK (bidirectional)\nAsk: \"Is this buyer spec a composite of platform specs, or a component of a platform composite?\"\n\nDirection A — Buyer composite, platform has components:\n- Buyer: \"Size: 10x20x5mm\" + Platform has: Length, Width, Height → REJECT buyer composite.\n\nDirection B — Buyer component, platform has composite:\n- Buyer: \"Diameter\" + Platform has: \"Dimensions (OD x ID x L)\" → REJECT buyer component.\n\nThis rule is strictly bidirectional. Apply without exception.\n\nRULE: If composite/component overlap exists in either direction → REJECT.\n\n---\n\nSTEP 4 — GENUINE GAP CONFIRMATION\nOnly reached if the buyer spec survives Steps 1, 2, and 3.\n\nAsk these three questions. All three must be YES to ACCEPT:\n□ Does this spec capture a real-world property that no platform spec covers, even approximately?\n□ Would adding this spec provide information that buyers genuinely cannot express using existing platform specs?\n□ Is this a standalone, atomic data attribute — not derivable from or reducible to any combination of existing specs?\n\nIf any answer is NO or UNCERTAIN → REJECT.\nIf all three are YES → ACCEPT.\n\n---\n\nSTRICT RULES:\n1. Use buyer spec names EXACTLY as they appear in the input. Never rename, clean up, or rephrase.\n2. Never include any spec that is already on the platform under any name.\n3. Never output commentary, reasoning, or explanation — only the JSON object.\n4. Never invent specs. Never merge two buyer specs into one. Never split one into two.\n5. Never use product_count as a reason to include or exclude a spec.\n6. Never include a spec just because its name sounds different from platform specs. Name is irrelevant; meaning is everything.\n7. If a buyer spec has zero example values or an empty example_values array, apply Steps 1–3 based on the spec name alone before considering ACCEPT.\n8. Output specs sorted by total_product_count in descending order. Highest product count first.\n\n---\n\nMANDATORY SELF-VERIFICATION:\nBefore writing any spec into the output, run this checklist mentally for each one:\n\n□ Step 1 passed: No platform spec — by any name or synonym — captures the same property\n□ Step 2 passed: Fewer than 80% of example values are covered by any existing platform spec\n□ Step 3 passed: This spec is not a composite or component of any existing platform spec\n□ Step 4 passed: All three confirmation questions answered YES\n\nIf even one box is unchecked → remove from output. No exceptions.\n\n\n\nOUTPUT FORMAT:\nReturn ONLY a valid JSON object. No preamble. No explanation. No markdown. No code fences. No trailing text.\nThe new_specs_missing_on_platform array MUST be sorted by total_product_count descending — highest count first.\n\n{\n  \"new_specs_missing_on_platform\": [\n    {\n      \"spec_name\": \"<exact buyer spec name as given in input>\",\n      \"total_product_count\": <number>,\n      \"example_values\": [\"<value1>\", \"<value2>\", \"<value3>\"]\n    }\n  ]\n}\n\nIf no genuinely new specs are found:\n{\n  \"new_specs_missing_on_platform\": []\n}\n\n",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        2432,
+        320
+      ],
+      "id": "42982416-6604-45ae-9330-4b5e7f013f9e",
+      "name": "Spec Missing Agent",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const category = $node[\"Pre LLM\"].json.category;\nconst mcatid = $node[\"Merged Data\"].json.mcat_id;\n\nconst specs = $json.new_specs_missing_on_platform || [];\n\nconst now = new Date().toISOString();  // single timestamp for consistency\n\nconst rows = specs.map(spec => ({\n  mcat_id: mcatid,\n  category: category,\n  spec_name: spec.spec_name,\n  expected_tier: spec.expected_tier,\n  total_product_count: spec.total_product_count,\n  example_values: (spec.example_values || []).join(\", \"),\n  created_at: now,\n}));\n\nreturn rows.map(r => ({ json: r }));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3312,
+        320
+      ],
+      "id": "a9f73285-5bc5-4b88-a499-823ff48734aa",
+      "name": "Missing Spec Flattened",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1cFA7xlxoSrb-2YxUzKRoMn8PDCs0eT0UMmphM4-4Qu0",
+          "mode": "list",
+          "cachedResultName": "Missing Checker Sheet",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1cFA7xlxoSrb-2YxUzKRoMn8PDCs0eT0UMmphM4-4Qu0/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1773005933,
+          "mode": "list",
+          "cachedResultName": "Date Sheet 2",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1cFA7xlxoSrb-2YxUzKRoMn8PDCs0eT0UMmphM4-4Qu0/edit#gid=1773005933"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "Missing Checker"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -672,
+        336
+      ],
+      "id": "d6613a19-502e-49dc-9214-3b376c4bfd5f",
+      "name": "input Sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "w2cXsr3Q4muTWk3H",
+          "name": "Google Sheets account 257"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "ec271c4b-c684-4dce-95f3-58ff9cc8c921",
+              "leftValue": "={{ $json.new_specs_missing_on_platform }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "array",
+                "operation": "lengthEquals",
+                "rightType": "number"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        3056,
+        304
+      ],
+      "id": "b2d04e59-eb88-4213-9e6c-5d23468a70d5",
+      "name": "If",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1cFA7xlxoSrb-2YxUzKRoMn8PDCs0eT0UMmphM4-4Qu0",
+          "mode": "list",
+          "cachedResultName": "Missing Checker Sheet",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1cFA7xlxoSrb-2YxUzKRoMn8PDCs0eT0UMmphM4-4Qu0/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1773005933,
+          "mode": "list",
+          "cachedResultName": "Date Sheet 2",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1cFA7xlxoSrb-2YxUzKRoMn8PDCs0eT0UMmphM4-4Qu0/edit#gid=1773005933"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "mcat_name": "={{ $json.category_name }}",
+            "Missing Checker": "Not Missing"
+          },
+          "matchingColumns": [
+            "mcat_name"
+          ],
+          "schema": [
+            {
+              "id": "mcat_id",
+              "displayName": "mcat_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "mcat_name",
+              "displayName": "mcat_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "pmcat_id",
+              "displayName": "pmcat_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "pmcat_name",
+              "displayName": "pmcat_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Group",
+              "displayName": "Group",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Missing Checker",
+              "displayName": "Missing Checker",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Addition",
+              "displayName": "Addition",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Sequence Checker",
+              "displayName": "Sequence Checker",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Sequence Addition",
+              "displayName": "Sequence Addition",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Comment",
+              "displayName": "Comment",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Config Fill Rate -Paid User",
+              "displayName": "Config Fill Rate -Paid User",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Prod Added- Paid User",
+              "displayName": "Prod Added- Paid User",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Config Fill Rate-Paid Overall",
+              "displayName": "Config Fill Rate-Paid Overall",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Prod Added-Paid Overall",
+              "displayName": "Prod Added-Paid Overall",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        3392,
+        -48
+      ],
+      "id": "2f4d7cc8-5954-4750-a200-f1450c69affd",
+      "name": "Update row in sheet1",
+      "retryOnFail": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "w2cXsr3Q4muTWk3H",
+          "name": "Google Sheets account 257"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -448,
+        336
+      ],
+      "id": "1e087c4d-07d2-4f7b-a9ee-d03750db0ad0",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "name": "Replace Me",
+      "typeVersion": 1,
+      "position": [
+        -160,
+        768
+      ],
+      "id": "883b2da9-fbb6-401e-984b-212742c9114d"
+    },
+    {
+      "parameters": {
+        "jsCode": "const grouped = {};\n\nfor (const item of items) {\n  const row = item.json;\n  const spec = row.normalised_spec_name;\n\n  if (!grouped[spec]) {\n    grouped[spec] = {\n      spec_name: spec,\n      total_product_count: 0,\n      option_map: {}\n    };\n  }\n\n  const count = Number(row.prod_count || 0);\n  grouped[spec].total_product_count += count;\n\n  // Combine value + unit\n  let value = row.normalised_spec_value || \"\";\n  if (row.normalised_spec_value_unit) {\n    value = `${value} ${row.normalised_spec_value_unit}`;\n  }\n  value = value.trim();\n  if (!value) continue;\n\n  grouped[spec].option_map[value] =\n    (grouped[spec].option_map[value] || 0) + count;\n}\n\nconst buyer_specs = Object.values(grouped).map(spec => {\n  const sortedOptions = Object.entries(spec.option_map)\n    .sort((a, b) => b[1] - a[1]);\n\n  const totalCount = spec.total_product_count || 0;\n  let runningSum = 0;\n  let selected = [];\n\n  // STEP 1 → Select based only on 90% coverage\n  for (const [value, count] of sortedOptions) {\n    selected.push({ value, count });\n    runningSum += count;\n\n    if (totalCount > 0 && runningSum / totalCount >= 0.9) {\n      break;\n    }\n  }\n\n  // STEP 2 → Remove options with count <= 2 AFTER selection\n  selected = selected\n    .filter(opt => opt.count > 2)\n    .map(opt => opt.value);\n\n  return {\n    spec_name: spec.spec_name,\n    total_product_count: spec.total_product_count,\n    example_values: selected\n  };\n});\n\nreturn [{ json: { buyer_specs } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1568,
+        320
+      ],
+      "id": "0b577dbf-af71-48a4-8c88-7e6a7775fa95",
+      "name": "Code in JavaScript2",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const buyer = $json;\nconst seller = $items(\"Seller Specs Simplified\")[0].json;\n\nreturn [\n{\n  json: {\n    ...seller,\n    ...buyer\n  }\n}\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2032,
+        320
+      ],
+      "id": "c1e931ef-cd04-46fc-b9c1-00b09dd0f4e0",
+      "name": "Merged Data",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1cFA7xlxoSrb-2YxUzKRoMn8PDCs0eT0UMmphM4-4Qu0",
+          "mode": "list",
+          "cachedResultName": "Missing Checker Sheet",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1cFA7xlxoSrb-2YxUzKRoMn8PDCs0eT0UMmphM4-4Qu0/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1773005933,
+          "mode": "list",
+          "cachedResultName": "Date Sheet 2",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1cFA7xlxoSrb-2YxUzKRoMn8PDCs0eT0UMmphM4-4Qu0/edit#gid=1773005933"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "mcat_id": "={{ $json.mcat_id }}",
+            "Missing Checker": "Buyer Spec issue"
+          },
+          "matchingColumns": [
+            "mcat_id"
+          ],
+          "schema": [
+            {
+              "id": "mcat_id",
+              "displayName": "mcat_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "mcat_name",
+              "displayName": "mcat_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "pmcat_id",
+              "displayName": "pmcat_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "pmcat_name",
+              "displayName": "pmcat_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Missing Checker",
+              "displayName": "Missing Checker",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Custom Checker",
+              "displayName": "Custom Checker",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Addition",
+              "displayName": "Addition",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Sequence Checker",
+              "displayName": "Sequence Checker",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Sequence Addition",
+              "displayName": "Sequence Addition",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Run on",
+              "displayName": "Run on",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        864,
+        592
+      ],
+      "id": "a1cf6f5c-9a54-436d-9af2-8e5794b039ad",
+      "name": "Update row in sheet3",
+      "retryOnFail": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "w2cXsr3Q4muTWk3H",
+          "name": "Google Sheets account 257"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1cFA7xlxoSrb-2YxUzKRoMn8PDCs0eT0UMmphM4-4Qu0",
+          "mode": "list",
+          "cachedResultName": "Missing Checker Sheet",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1cFA7xlxoSrb-2YxUzKRoMn8PDCs0eT0UMmphM4-4Qu0/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Data Sheet",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1cFA7xlxoSrb-2YxUzKRoMn8PDCs0eT0UMmphM4-4Qu0/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "mcat_id": "={{ $json.mcat_id }}",
+            "Done on": "Seller Spec Error"
+          },
+          "matchingColumns": [
+            "mcat_id"
+          ],
+          "schema": [
+            {
+              "id": "mcat_id",
+              "displayName": "mcat_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "mcat_name",
+              "displayName": "mcat_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "pmcat_id",
+              "displayName": "pmcat_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "pmcat_name",
+              "displayName": "pmcat_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Group",
+              "displayName": "Group",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Done on",
+              "displayName": "Done on",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Addition",
+              "displayName": "Addition",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Comment",
+              "displayName": "Comment",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Config Fill Rate -Paid User",
+              "displayName": "Config Fill Rate -Paid User",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Prod Added- Paid User",
+              "displayName": "Prod Added- Paid User",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Config Fill Rate-Paid Overall",
+              "displayName": "Config Fill Rate-Paid Overall",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Prod Added-Paid Overall",
+              "displayName": "Prod Added-Paid Overall",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        128,
+        592
+      ],
+      "id": "e50a9d37-57b2-441d-b9a3-05e8fbfa8a99",
+      "name": "Update row in sheet2",
+      "retryOnFail": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "w2cXsr3Q4muTWk3H",
+          "name": "Google Sheets account 257"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1cFA7xlxoSrb-2YxUzKRoMn8PDCs0eT0UMmphM4-4Qu0",
+          "mode": "list",
+          "cachedResultName": "Missing Checker Sheet",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1cFA7xlxoSrb-2YxUzKRoMn8PDCs0eT0UMmphM4-4Qu0/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1773005933,
+          "mode": "list",
+          "cachedResultName": "Date Sheet 2",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1cFA7xlxoSrb-2YxUzKRoMn8PDCs0eT0UMmphM4-4Qu0/edit#gid=1773005933"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "mcat_id": "={{ $json.mcat_id }}",
+            "Run on": "={{ $json.created_at }}",
+            "Missing Checker": "Done"
+          },
+          "matchingColumns": [
+            "mcat_id"
+          ],
+          "schema": [
+            {
+              "id": "mcat_id",
+              "displayName": "mcat_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "mcat_name",
+              "displayName": "mcat_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "pmcat_id",
+              "displayName": "pmcat_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "pmcat_name",
+              "displayName": "pmcat_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Missing Checker",
+              "displayName": "Missing Checker",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Custom Checker",
+              "displayName": "Custom Checker",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Addition",
+              "displayName": "Addition",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Sequence Checker",
+              "displayName": "Sequence Checker",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Sequence Addition",
+              "displayName": "Sequence Addition",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Run on",
+              "displayName": "Run on",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        3680,
+        496
+      ],
+      "id": "ed7e602f-5c1e-4550-a060-0b01bdf9d946",
+      "name": "Update row in sheet4",
+      "retryOnFail": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "w2cXsr3Q4muTWk3H",
+          "name": "Google Sheets account 257"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Extract from File1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "manual trigger": {
+      "main": [
+        [
+          {
+            "node": "input Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "seller api": {
+      "main": [
+        [
+          {
+            "node": "Spec URL",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update row in sheet2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model4": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Spec Missing Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pre LLM": {
+      "main": [
+        [
+          {
+            "node": "Spec Missing Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet1": {
+      "main": [
+        []
+      ]
+    },
+    "Seller Specs Simplified": {
+      "main": [
+        [
+          {
+            "node": "Buyer Seller Call Data API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Seller Specs": {
+      "main": [
+        [
+          {
+            "node": "Seller Specs Simplified",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Missing Specs": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Spec URL": {
+      "main": [
+        [
+          {
+            "node": "Seller Specs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Top 6 Specs": {
+      "main": [
+        [
+          {
+            "node": "Merged Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buyer Seller Call Data URL": {
+      "main": [
+        [
+          {
+            "node": "Buyer Seller Call Data CSV",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buyer Seller Call Data API": {
+      "main": [
+        [
+          {
+            "node": "Buyer Seller Call Data URL",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update row in sheet3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buyer Seller Call Data CSV": {
+      "main": [
+        [
+          {
+            "node": "Extract from File1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Spec Missing Agent": {
+      "main": [
+        [
+          {
+            "node": "Missing Specs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Missing Spec Flattened": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Update row in sheet4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "input Sheet": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Update row in sheet1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Missing Spec Flattened",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update row in sheet": {
+      "main": [
+        []
+      ]
+    },
+    "Update row in sheet1": {
+      "main": [
+        []
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Replace Me",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "seller api",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Replace Me": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript2": {
+      "main": [
+        [
+          {
+            "node": "Top 6 Specs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merged Data": {
+      "main": [
+        [
+          {
+            "node": "Pre LLM",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "2b568c2a-4356-4db8-a969-f9a06f974f93",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "17519d3ef9735db55aeaaca554134cc04945a8942840756f95f4251d52adf708"
+  },
+  "id": "1WG0H3ykln3BHu2n",
+  "tags": []
+}

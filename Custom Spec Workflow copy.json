@@ -1,0 +1,1188 @@
+{
+  "name": "Custom Spec Workflow copy",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -2288,
+        -32
+      ],
+      "id": "4f986686-e4ee-4423-82eb-3b2cb01a04b9",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1IsqLGo284dxdUihzWZBHddr6hb8zCukkUrpSDxhNwtg",
+          "mode": "list",
+          "cachedResultName": "manan spec",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1IsqLGo284dxdUihzWZBHddr6hb8zCukkUrpSDxhNwtg/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1916655179,
+          "mode": "list",
+          "cachedResultName": "Sheet2",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1IsqLGo284dxdUihzWZBHddr6hb8zCukkUrpSDxhNwtg/edit#gid=1916655179"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -2080,
+        -32
+      ],
+      "id": "35dc86b0-0e3e-4e45-967f-02660bdb254f",
+      "name": "Get row(s) in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "w2cXsr3Q4muTWk3H",
+          "name": "Google Sheets account 257"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -1856,
+        -32
+      ],
+      "id": "770b8ee5-c789-4993-9922-194c99fc0d1f",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1IsqLGo284dxdUihzWZBHddr6hb8zCukkUrpSDxhNwtg",
+          "mode": "list",
+          "cachedResultName": "manan spec",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1IsqLGo284dxdUihzWZBHddr6hb8zCukkUrpSDxhNwtg/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1IsqLGo284dxdUihzWZBHddr6hb8zCukkUrpSDxhNwtg/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "mcat_id",
+              "lookupValue": "={{ $json[\"mcat id\"] }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -1040,
+        128
+      ],
+      "id": "51c6736e-ca3d-49a8-9b52-9c11addd0f7b",
+      "name": "Get row(s) in sheet1",
+      "retryOnFail": true,
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "w2cXsr3Q4muTWk3H",
+          "name": "Google Sheets account 257"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\n// Agar data khali aaye toh empty return karein\nif (!items || items.length === 0) {\n  return [];\n}\n\n// Top level ke liye pehle item se MCAT details nikal lete hain\nconst mcatId = items[0].json.mcat_id;\nconst mcatName = items[0].json.mcat_name;\n\n// Specs ko group aur count karne ke liye ek map banayenge\nconst specsMap = {};\n\nitems.forEach(item => {\n  const data = item.json;\n  const specName = data.spec_name;\n  const optionValue = data.option_value;\n\n  // Check karte hain ki spec name exist karta hai\n  if (specName) {\n    // Agar ye spec pehli baar aaya hai, toh object banayein count 0 ke sath\n    if (!specsMap[specName]) {\n      specsMap[specName] = {\n        options: [],\n        count: 0\n      };\n    }\n    \n    // Har baar jab ye spec mile, iska count +1 kar dein\n    specsMap[specName].count += 1;\n    \n    // Duplicate options ko avoid karne ke liye check karte hain\n    if (optionValue !== undefined && !specsMap[specName].options.includes(optionValue)) {\n      specsMap[specName].options.push(optionValue);\n    }\n  }\n});\n\n// Map ko ek clean Array of Objects mein convert karte hain\nconst groupedSpecs = Object.keys(specsMap).map(key => {\n  return {\n    spec_name: key,\n    count: specsMap[key].count, // Naya field: Spec kitni baar aaya\n    options: specsMap[key].options\n  };\n});\n\n// Final Output return karte hain\nreturn [{\n  json: {\n    mcat_id: mcatId,\n    mcat_name: mcatName,\n    custom_specs: groupedSpecs\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -800,
+        128
+      ],
+      "id": "601e98f7-7c8e-4bb3-ace1-a0b40c90d698",
+      "name": "Code in JavaScript",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "url": "=https://get-presigned-url-for-mcat-w2yrp7i6za-el.a.run.app/?mcat_id={{ $json[\"mcat id\"] }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -928,
+        -528
+      ],
+      "id": "5f2e6219-7d3c-4038-979e-4833df34a30e",
+      "name": "seller api",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const specs = [];\n\nconst fs = items[0].json.finalized_specs;\n\nfs.finalized_primary_specs.specs.forEach(s => {\n  if (s.options) {\n    specs.push({ spec_name: s.spec_name, spec_options: s.options.slice(0, 6) });\n  }\n});\n\nfs.finalized_secondary_specs.specs.forEach(s => {\n  if (s.options) {\n    specs.push({ spec_name: s.spec_name, spec_options: s.options.slice(0, 6) });\n  }\n});\n\nfs.finalized_tertiary_specs.specs.forEach(s => {\n  if (s.options) {\n    specs.push({ spec_name: s.spec_name, spec_options: s.options.slice(0, 6) });\n  }\n});\n\nreturn [{\n  json: {\n    category: items[0].json.category_name,\n    platform_specs: specs\n  }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -32,
+        -544
+      ],
+      "id": "105d0566-1ee7-40c0-95d5-3695e2f8877f",
+      "name": "Seller Specs Simplified",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.finalized_spec_url }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -384,
+        -544
+      ],
+      "id": "92f67788-90b1-4899-aa2f-f68ce76fb801",
+      "name": "Seller Specs",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Input: $json is each item returned by Fetch Spec / normalizer\n// Output: { mcat_id, finalized_spec_url }\n\nconst out = [];\nconst item = $json; // current batch item\n\n// helper to safely read nested path\nfunction get(obj, path, def = undefined) {\n  return path.split('.').reduce((a, b) => (a && a[b] !== undefined) ? a[b] : def, obj);\n}\n\nconst mcat_id = item.mcat_id || get(item, 'mcatId') || null;\n\n// Try the canonical path: finalized_specs.file_info.url\nlet url = get(item, 'finalized_specs.file_info.url');\n\n// fallback: sometimes file_info might be array, or finalized_specs may be null\nif (!url) {\n  // case: finalized_specs.file_info could be an array\n  const fileInfo = get(item, 'finalized_specs.file_info');\n  if (Array.isArray(fileInfo) && fileInfo.length > 0) {\n    url = fileInfo[0].url || fileInfo[0].download_url || null;\n  }\n}\n\n// ultimate fallback: search object for any https://storage.googleapis.com/... occurrence\nif (!url) {\n  const jsonStr = JSON.stringify(item);\n  const m = jsonStr.match(/https:\\/\\/storage\\.googleapis\\.com\\/[^\\s\"']+/);\n  if (m) url = m[0];\n}\n\nreturn [{ json: { mcat_id, finalized_spec_url: url || null } }];\nadr-wsbu-ocm"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -640,
+        -544
+      ],
+      "id": "c34c08bb-02b4-42bc-a400-8bab3c3d2fd1",
+      "name": "Spec URL",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1cFA7xlxoSrb-2YxUzKRoMn8PDCs0eT0UMmphM4-4Qu0",
+          "mode": "list",
+          "cachedResultName": "Missing Checker Sheet",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1cFA7xlxoSrb-2YxUzKRoMn8PDCs0eT0UMmphM4-4Qu0/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Data Sheet",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1cFA7xlxoSrb-2YxUzKRoMn8PDCs0eT0UMmphM4-4Qu0/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "mcat_id": "={{ $json.mcat_id }}",
+            "Done on": "Seller Spec Error"
+          },
+          "matchingColumns": [
+            "mcat_id"
+          ],
+          "schema": [
+            {
+              "id": "mcat_id",
+              "displayName": "mcat_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "mcat_name",
+              "displayName": "mcat_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "pmcat_id",
+              "displayName": "pmcat_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "pmcat_name",
+              "displayName": "pmcat_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Group",
+              "displayName": "Group",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Done on",
+              "displayName": "Done on",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Addition",
+              "displayName": "Addition",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Comment",
+              "displayName": "Comment",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Config Fill Rate -Paid User",
+              "displayName": "Config Fill Rate -Paid User",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Prod Added- Paid User",
+              "displayName": "Prod Added- Paid User",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Config Fill Rate-Paid Overall",
+              "displayName": "Config Fill Rate-Paid Overall",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Prod Added-Paid Overall",
+              "displayName": "Prod Added-Paid Overall",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -2224,
+        -768
+      ],
+      "id": "d237da9a-440e-44a7-9f21-39749723f129",
+      "name": "Update row in sheet2",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "w2cXsr3Q4muTWk3H",
+          "name": "Google Sheets account 257"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\nif (!items || items.length === 0) {\n  return [];\n}\n\n// Har item ko process karte hain\nitems.forEach(item => {\n  if (item.json && item.json.custom_specs) {\n    \n    // 1. Pehle options ko top 5 unique mein trim karte hain (Aapka purana logic)\n    item.json.custom_specs = item.json.custom_specs.map(spec => {\n      if (spec.options && Array.isArray(spec.options)) {\n        spec.options = [...new Set(spec.options)].slice(0, 5);\n      }\n      return spec;\n    });\n\n    // 2. NAYA LOGIC: Specs ko 'count' ke hisaab se Descending (High to Low) sort karte hain\n    item.json.custom_specs.sort((a, b) => {\n      // Agar kisi wajah se count missing ho toh 0 maan lein\n      const countA = a.count || 0;\n      const countB = b.count || 0;\n      \n      return countB - countA; // Sabse bada number pehle aayega\n    });\n  }\n});\n\n// Sorted aur Trimmed data wapas return kar dete hain\nreturn items;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -560,
+        128
+      ],
+      "id": "23cc5360-33a0-4951-960a-dba39bf2d4aa",
+      "name": "Code in JavaScript1",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "google/gemini-2.5-flash",
+          "mode": "list",
+          "cachedResultName": "google/gemini-2.5-flash"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        -336,
+        352
+      ],
+      "id": "1821a29b-00a2-42f4-a724-fb9067b846ae",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "UZ5BfRnTppxhBHXI",
+          "name": "OpenAi account 400"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "let aiResponse = $input.first().json.output; \n\ntry {\n  // 1. Clean Markdown\n  aiResponse = aiResponse.replace(/```json/g, '').replace(/```/g, '').trim();\n  const parsed = JSON.parse(aiResponse);\n\n  // 2. Return data without calling the Loop node directly to avoid the 'read only' error\n  // We grab the name and ID from the input fields if available\n  return parsed.map(item => {\n    return {\n      json: {\n        new_normalized_spec: item.new_normalized_spec,\n        original_specs_merged: item.original_specs_merged\n      }\n    };\n  });\n\n} catch (error) {\n  return [{ json: { error: \"Parsing failed\", message: error.message, attempted_text: aiResponse } }];\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1552,
+        432
+      ],
+      "id": "9c854546-8b4c-4d26-ae0f-d99745d39c6a",
+      "name": "Code in JavaScript2"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        864,
+        -400
+      ],
+      "id": "7257dd6d-d466-4c15-8331-a739c8e3d33a",
+      "name": "Merge",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\n// Har item ko clean aur arrange karte hain\nconst cleanData = items.map(item => {\n  const data = item.json;\n  \n  return {\n    json: {\n      // 1. ID aur Name sabse upar ek hi baar\n      mcat_id: data.mcat_id || \"ID_NOT_FOUND\",\n      mcat_name: data.mcat_name || data.category || \"NAME_NOT_FOUND\",\n      \n      // 2. Upper branch (API) se aaye hue Platform Specs\n      platform_specs: data.platform_specs || [],\n      \n      // 3. Lower branch (Sheet) se aaye hue Custom Specs with options\n      custom_specs: data.custom_specs || []\n    }\n  };\n});\n\nreturn cleanData;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1088,
+        -400
+      ],
+      "id": "be281c90-2335-48d8-bc0b-9d3c0757933e",
+      "name": "Code in JavaScript3",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Role: You are an Expert B2B Product Data Auditor For an Indian B2B marketplace. Your specialty is Gap Analysis between Seller-provided custom data and Platform-standard specifications.\n\nObjective: \nCompare the \"custom_specs\"  against the \"platform_specs\" (existing standards). Identify which custom specs are truly unique and MISSING from the platform, while strictly filtering out duplicates or semantic matches.\n\nInput Data Structure:\n- MCAT ID: {{ $json.mcat_id }}\n- Category: {{ $json.mcat_name }}\n- Custom Specs (Seller): {{ JSON.stringify($json.custom_specs) }}\n- Platform Specs (Existing): {{ JSON.stringify($json.platform_specs) }}\n\nStrict Rules for Logic:\nStrict Rules for Logic:\n\n1. PHASE 1: Aggressive Internal Normalization & Deduplication (CRITICAL):\n   - Before comparing with platform_specs, you MUST evaluate the `custom_specs` array and group all semantic duplicates, typos, abbreviations, formatting variations, AND Functional Overlaps into single concepts.\n   - Functional/Conceptual Overlap: Merge specs that describe the exact same physical feature, purpose, or attribute, even if they use completely different vocabulary.\n   - Example 1 (Typos/Synonyms): \"MOL WEIGHT\", \"WEIGHT\", \"Mol. Weight\" MUST be merged into \"Molecular Weight\".\n   - Example 2 (Functional Overlap): \"Battery Capacity\" and \"Battery Storage\" describe the exact same feature. They MUST be merged into one concept: \"Battery Capacity\".\n   - Example 3 (Functional Overlap): \"Dimension\", \"Size\", and \"Measurements\" MUST be merged into \"Dimensions\".\n   - Example 4: \"Grade\" and \"Grades\" MUST be merged into: \"Grade\".\n\n2. PHASE 2: External Deduplication against Platform Specs:\n   - Now, take your internally normalized concepts and compare them against `platform_specs`. \n   - If the platform already has a spec with the same semantic meaning, REJECT the custom spec entirely.\n   - Example: If Custom is \"Appearance\" and Platform has \"Physical Form\", these are semantic matches. REJECT \"Appearance\".\n\n3. Contextual Awareness (Using Category Name):\n   - Use the `mcat_name` to deduce the true meaning of poorly named specs.\n   - Example: In the API category, if a seller inputs \"Store\", it means \"Storage Condition\". If \"Storage Condition\" exists in Platform, REJECT \"Store\". If it doesn't, output \"Storage Condition\", NOT \"Store\".\n   - Example: \"Uses\" -> \"Therapeutic Use\".\n\n4. Strict Naming Convention & Formatting:\n   - For the final truly missing specs, you MUST output them in professional, industry-standard Title Case (e.g., \"Molecular Weight\").\n   - NEVER output in ALL CAPS (no \"BRAND\") or all lowercase.\n   - Strip all trailing punctuation (remove colons, dots, dashes). E.g., convert \"Assay (HPLC):\" to \"Assay (HPLC)\".\n\n No Hallucinations: \n   - Strictly stick to the underlying concepts provided in the `custom_specs`. Do not invent or add new specifications that the seller did not provide.\n5. Strict Output Format: Return ONLY a JSON object. No conversational filler.\n6. Internal Normalization: The custom specs are raw and unedited. Before comparing, internally group variations, typos, and abbreviations into single concepts (e.g for your refrence ., treat \"cas no\", \"CAS\", and \"CAS Registry Number\" as one single concept; treat \"FOR ULA\" and \"formula\" as one).\n7. Strict Casing & Spelling (Exact Match): Always output the final spec names in proper Title Case (e.g., \"Brand Name\"). NEVER output in ALL CAPS (e.g., strictly NO \"BRAND NAME\") or all lowercase. If the custom spec is already cleanly formatted in the input (e.g., \"Brand Name\"), retain its exact spelling and casing.So You are strictly matching and using input only \n\n8. Strict Internal Deduplication & Cleanup: Before finalizing the missing_unique_specs array, you MUST deduplicate the items against EACH OTHER.\n\nNo Plurals/Duplicates: Never include both singular and plural forms of the same concept (e.g., if both \"Grade\" and \"Grades\" are missing, output ONLY \"Grade\").\n\nNo Punctuation: Remove all trailing punctuations like dots, colons, or dashes (e.g., convert \"Packaging Size.\" to \"Packaging Size\" and \"Assay (HPLC):\" to \"Assay (HPLC)\").\n\nDesired JSON Output Structure:\n{\n  \"mcat_id\": 180202,\n  \"mcat_name\": \"...\",\n  \"missing_unique_specs\": [\"Spec Name 1\", \"Spec Name 2\"],\n  \"reasoning_for_rejection\": [\n    {\"rejected_custom_spec\": \"Production Capacity\", \"reason\": \"Redundant; covered by existing 'Capacity'\"}\n  ]\n}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        1328,
+        -400
+      ],
+      "id": "5af99cda-4878-427b-8903-197c3251411b",
+      "name": "AI Agent1",
+      "retryOnFail": true,
+      "waitBetweenTries": 5000,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "google/gemini-2.5-flash",
+          "mode": "list",
+          "cachedResultName": "google/gemini-2.5-flash"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        1328,
+        0
+      ],
+      "id": "ab582f7d-2b45-4b36-8818-c498152e6c97",
+      "name": "OpenAI Chat Model1",
+      "credentials": {
+        "openAiApi": {
+          "id": "UZ5BfRnTppxhBHXI",
+          "name": "OpenAi account 400"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. AI Agent ka raw text output lijiye\nlet aiResponse = $input.first().json.output; \n\ntry {\n  // 2. Markdown formatting (```json) clean karein taaki parse karne mein error na aaye\n  aiResponse = aiResponse.replace(/```json/gi, '').replace(/```/g, '').trim();\n\n  // 3. String ko proper JSON object mein convert karein\n  const parsedData = JSON.parse(aiResponse);\n\n  // 4. Data ko n8n format mein return karein\n  return [{\n    json: {\n      mcat_id: parsedData.mcat_id || \"ID_NOT_FOUND\",\n      mcat_name: parsedData.mcat_name || \"NAME_NOT_FOUND\",\n      missing_unique_specs: parsedData.missing_unique_specs || [],\n      reasoning_for_rejection: parsedData.reasoning_for_rejection || []\n    }\n  }];\n\n} catch (error) {\n  // 5. Agar AI ne proper JSON nahi diya toh error handle karein (workflow crash hone se bachaye)\n  return [{\n    json: {\n      error: \"AI Response Parsing Failed\",\n      message: error.message,\n      raw_output: aiResponse\n    }\n  }];\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1776,
+        -416
+      ],
+      "id": "55ee6b1c-6096-4fba-a474-2a46e75583ab",
+      "name": "Code in JavaScript4",
+      "retryOnFail": true,
+      "waitBetweenTries": 5000,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"mcat_id\": {\n      \"type\": \"number\",\n      \"description\": \"The exact MCAT ID provided in the input.\"\n    },\n    \"mcat_name\": {\n      \"type\": \"string\",\n      \"description\": \"The exact Category Name provided in the input.\"\n    },\n    \"missing_unique_specs\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"string\"\n      },\n      \"description\": \"Clean, standardized, Title Case list of unique specs. Must NOT contain duplicates (e.g., do not include both 'Grade' and 'Grades'). Strip all trailing punctuation like colons or periods.\"\n    },\n    \"reasoning_for_rejection\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"object\",\n        \"properties\": {\n          \"rejected_custom_spec\": {\n            \"type\": \"string\",\n            \"description\": \"The exact name of the raw custom spec that was rejected.\"\n          },\n          \"reason\": {\n            \"type\": \"string\",\n            \"description\": \"Short explanation of why it was rejected (e.g., 'Semantic match with Brand').\"\n          }\n        },\n        \"required\": [\n          \"rejected_custom_spec\",\n          \"reason\"\n        ],\n        \"additionalProperties\": false\n      },\n      \"description\": \"List of all custom specs that were not included in the missing list, with reasons.\"\n    }\n  },\n  \"required\": [\n    \"mcat_id\",\n    \"mcat_name\",\n    \"missing_unique_specs\",\n    \"reasoning_for_rejection\"\n  ],\n  \"additionalProperties\": false\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        1680,
+        704
+      ],
+      "id": "c21ccb31-f328-47cf-9ec3-ed6df5e9f57c",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1IsqLGo284dxdUihzWZBHddr6hb8zCukkUrpSDxhNwtg",
+          "mode": "list",
+          "cachedResultName": "manan spec",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1IsqLGo284dxdUihzWZBHddr6hb8zCukkUrpSDxhNwtg/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1925517624,
+          "mode": "list",
+          "cachedResultName": "Sheet3",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1IsqLGo284dxdUihzWZBHddr6hb8zCukkUrpSDxhNwtg/edit#gid=1925517624"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Mcat Id": "={{ $json.mcat_id }}",
+            "Mcat Name": "={{ $json.mcat_name }}",
+            "Missing Spec": "={{ $json.missing_unique_specs }}",
+            "Reason Of Rejection": "={{ $json.reasoning_for_rejection }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Mcat Id",
+              "displayName": "Mcat Id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Mcat Name",
+              "displayName": "Mcat Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Missing Spec",
+              "displayName": "Missing Spec",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Reason Of Rejection",
+              "displayName": "Reason Of Rejection",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2320,
+        -448
+      ],
+      "id": "fb4c9dd9-2360-4e6f-9b38-5c9d9e424f38",
+      "name": "Append row in sheet",
+      "retryOnFail": true,
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "w2cXsr3Q4muTWk3H",
+          "name": "Google Sheets account 257"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\n// Agar data khali aaye toh empty return karein\nif (!items || items.length === 0) {\n  return [];\n}\n\n// Har item ko process karte hain\nitems.forEach(item => {\n  if (item.json && item.json.custom_specs) {\n    \n    // Filter lagakar sirf wahi specs rakhte hain jinka count 5 ya usse zyada hai\n    item.json.custom_specs = item.json.custom_specs.filter(spec => {\n      // Agar count missing hai toh 0 maan lein\n      const count = spec.count || 0;\n      return count >= 5; \n    });\n    \n  }\n});\n\n// Cleaned data wapas return kar dete hain\nreturn items;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        512,
+        128
+      ],
+      "id": "acd40f7c-647a-4998-806f-afa8da01ac71",
+      "name": "Code in JavaScript5",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. AI Agent ka raw text output lijiye\nlet aiResponse = $input.first().json.output; \n\ntry {\n  // 2. Markdown formatting clean karein\n  aiResponse = aiResponse.replace(/```json/gi, '').replace(/```/g, '').trim();\n\n  // 3. String ko proper JSON mein convert karein\n  let parsedData = JSON.parse(aiResponse);\n\n  // 4. THE FIX: Agar AI ne galti se sidha Array de diya hai, toh usko Object mein wrap karein\n  if (Array.isArray(parsedData)) {\n    parsedData = {\n      // Pichle node se ID aur Name utha rahe hain safety ke liye\n      mcat_id: $input.first().json.mcat_id || \"ID_NOT_FOUND\",\n      mcat_name: $input.first().json.mcat_name || \"NAME_NOT_FOUND\",\n      normalized_results: parsedData\n    };\n  }\n\n  // 5. Data ko n8n format mein return karein\n  return [{\n    json: parsedData\n  }];\n\n} catch (error) {\n  // 6. Agar parsing fail ho jaye\n  return [{\n    json: {\n      error: \"AI Response Parsing Failed\",\n      message: error.message,\n      raw_output: aiResponse \n    }\n  }];\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        16,
+        128
+      ],
+      "id": "b76b6546-575f-48d1-9c59-539bc5d816d3",
+      "name": "Code in JavaScript6",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. Current data (AI ka clean output jisme merged_from hai)\nconst aiData = $input.first().json;\n\n// 2. TIME MACHINE: Original data uthate hain jisme counts aur options the\n// Screenshot ke hisaab se us node ka naam 'Code in JavaScript1' hai.\nconst originalItems = $items(\"Code in JavaScript1\");\n\nif (!originalItems || originalItems.length === 0) {\n  throw new Error(\"Could not find data from 'Code in JavaScript1'. Please check the node name.\");\n}\n\nconst originalSpecs = originalItems[0].json.custom_specs || [];\n\n// 3. Original specs ki ek fast lookup dictionary banate hain\nconst originalSpecsMap = {};\noriginalSpecs.forEach(spec => {\n  originalSpecsMap[spec.spec_name] = {\n    count: spec.count || 0,\n    options: spec.options || []\n  };\n});\n\n// 4. AI ke data ko map karke counts aur options jodte hain\nconst finalSpecs = [];\n\n// AI parser ne data jis list mein diya hai (normalized_custom_specs)\nconst normalizedArray = aiData.normalized_custom_specs || [];\n\nnormalizedArray.forEach(normSpec => {\n  let totalCount = 0;\n  let combinedOptions = [];\n\n  // Har us original spec (merged_from) ko dhoondhte hain jo is group mein aaya hai\n  if (normSpec.merged_from && Array.isArray(normSpec.merged_from)) {\n    normSpec.merged_from.forEach(rawName => {\n      // Agar wo original map mein mil gaya, toh uski details add kar do\n      if (originalSpecsMap[rawName]) {\n        totalCount += originalSpecsMap[rawName].count; // Count Plus (+) ho jayega\n        combinedOptions.push(...originalSpecsMap[rawName].options); // Options combine ho jayenge\n      }\n    });\n  }\n\n  // Options ko deduplicate karte hain aur sirf Top 5 rakhte hain\n  const uniqueOptions = [...new Set(combinedOptions)].slice(0, 5);\n\n  finalSpecs.push({\n    spec_name: normSpec.spec_name,\n    count: totalCount,\n    options: uniqueOptions\n  });\n});\n\n// 5. Final array ko Count ke hisaab se sort karte hain (Highest count on top)\nfinalSpecs.sort((a, b) => b.count - a.count);\n\n// 6. Ekdum clean aur perfect data return karte hain\nreturn [{\n  json: {\n    mcat_id: aiData.mcat_id,\n    mcat_name: aiData.mcat_name,\n    custom_specs: finalSpecs\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        224,
+        128
+      ],
+      "id": "3f71dfe8-a528-42b1-a7b3-5532f35b11d9",
+      "name": "Code in JavaScript7",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. AI Parser (Code in JavaScript4) se aaya hua current data lijiye\nconst currentData = $input.first().json;\n\n// 2. TIME MACHINE: 'Code in JavaScript3' se historical data uthaiye\nconst nodeName = \"Code in JavaScript3\"; \n\nlet historicalData;\ntry {\n  historicalData = $items(nodeName);\n} catch (e) {\n  throw new Error(`Bhai, '${nodeName}' naam ka node nahi mila. Kripya check karein!`);\n}\n\nif (!historicalData || historicalData.length === 0) {\n  throw new Error(\"Node mil gaya par usme data nahi hai.\");\n}\n\n// Pichle node se custom specs ki list nikalte hain\nconst allSpecsWithOptions = historicalData[0].json.custom_specs || [];\n\n// 3. SMART MATCHING FUNCTION\n// Ye function capital/small letters aur brackets ko ignore karke match karega\nfunction findBestMatchOptions(aiName, originalSpecs) {\n  const aiClean = aiName.toLowerCase().trim();\n\n  // Step A: Exact Case-Insensitive Match (e.g., \"Li-Ion\" vs \"Li-ion\")\n  let match = originalSpecs.find(s => s.spec_name.toLowerCase().trim() === aiClean);\n  if (match) return match.options || [];\n\n  // Step B: Partial Match (Agar AI ne brackets hata diye hain)\n  const aiBase = aiClean.replace(/[^a-z0-9\\s]/g, ''); // Special chars hata diye\n  match = originalSpecs.find(s => {\n      const origBase = s.spec_name.toLowerCase().replace(/[^a-z0-9\\s]/g, '');\n      return origBase.includes(aiBase) || aiBase.includes(origBase);\n  });\n  \n  if (match) return match.options || [];\n\n  return []; // Agar kuch bhi match na ho toh empty array\n}\n\nconst enrichedMissingSpecs = [];\n\n// 4. AI ke strings ko unke options ke sath map karte hain\nif (currentData.missing_unique_specs && Array.isArray(currentData.missing_unique_specs)) {\n  currentData.missing_unique_specs.forEach(missingSpecName => {\n    \n    // Smart match function se sirf options nikalte hain\n    const matchedOptions = findBestMatchOptions(missingSpecName, allSpecsWithOptions);\n\n    // YAHAN SE COUNT HATA DIYA GAYA HAI! Sirf Name aur Options jayenge.\n    enrichedMissingSpecs.push({\n      spec_name: missingSpecName,\n      options: matchedOptions\n    });\n  });\n}\n\n// 5. Final JSON Return karein jo sidha Google Sheet mein append hone ke liye ready hai\nreturn [{\n  json: {\n    mcat_id: currentData.mcat_id,\n    mcat_name: currentData.mcat_name,\n    missing_unique_specs: enrichedMissingSpecs,\n    reasoning_for_rejection: currentData.reasoning_for_rejection\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2064,
+        -432
+      ],
+      "id": "78d7fca7-2267-45b9-8c03-86755cc0df39",
+      "name": "Code in JavaScript8",
+      "retryOnFail": true,
+      "waitBetweenTries": 5000,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=ROLE\nYou are a Product Specification Normalization Agent for a large Indian B2B marketplace.\n\nYour task is to clean, standardize, and deduplicate seller-provided specifications so that each specification represents one clear product attribute.\n\nIMPORTANT:\nYou are NOT comparing with platform specs.\nYou ONLY normalize seller-provided specifications.\n\n\nINPUT STRUCTURE\n\nMCAT ID: {{ $json.mcat_id }}\nCategory Name: {{ $json.mcat_name }}\n\nCustom Specs:\n{{ JSON.stringify($json.custom_specs) }}\n\nEach specification contains:\nspec_name\n\n\nOBJECTIVE\n\nNormalize the seller specifications so that:\n\n1. Duplicate specifications are merged\n2. Spelling mistakes are corrected\n3. Formatting variations are standardized\n4. Abbreviations are expanded when possible\n5. Singular/plural variations are unified\n6. Different wording describing the same attribute is merged\n\nAdditionally, maintain traceability by recording all original spec names that were merged. Ignore any option values or counts provided in the input; focus ONLY on normalizing the specification names.\n\n\nNORMALIZATION PRINCIPLES\n\n1. FORMAT NORMALIZATION\nTreat formatting variations as the same concept.\nExamples:\nWeight, WEIGHT, weight  \nMax.PV Input Voltage, Max PV Input Voltage  \nDimension (WxHxD), Dimensions, Size  \n\n2. ABBREVIATION NORMALIZATION\nExpand abbreviations where possible.\nExamples:\nNo → Number  \nQty → Quantity  \nTemp → Temperature  \nVol → Volume  \n\n3. TYPO CORRECTION\nCorrect obvious spelling mistakes.\nExamples:\nVoltge → Voltage  \nImput → Input  \nWeiight → Weight  \n\n4. SINGULAR / PLURAL NORMALIZATION\nTreat singular and plural forms as the same specification.\nExamples:\nGrade / Grades → Grade  \nApplication / Applications → Application  \n\n5. SEMANTIC SIMILARITY MERGING\nIf multiple spec names represent the same product attribute, merge them.\nExamples:\nDimension / Size / Measurements → Dimensions  \nModel Name / Model Number → Model  \nAppearance / Colour / Color → Appearance  \nForm / Product Form → Form  \n\n6. REMOVE FORMAT NOISE\nRemove unnecessary punctuation or trailing symbols.\nExamples:\nPackaging Size. → Packaging Size  \nAssay (HPLC): → Assay (HPLC)  \n\n7. CATEGORY CONTEXT\nUse the category name only to interpret ambiguous spec names when necessary.  \nDo not invent new attributes not present in the input.\n\n\nMERGED SPEC TRACEABILITY\n\nFor every normalized spec, include a list of all original spec names that were merged.\n\nExample:\n\nInput specs:\nWeight  \nWEIGHT  \nWeiight  \n\nOutput:\nWeight  \nmerged_from → [\"Weight\", \"WEIGHT\", \"Weiight\"]\n\n\nCONSTRAINTS\n\n1. Do NOT invent new specifications.\n2. Only normalize concepts present in the input.\n3. Each final specification must represent a unique product attribute.\n4. Maintain traceability of merged spec names.\n5. Do NOT include options or values in the output.\n\n\nNAMING RULES FOR FINAL SPEC NAMES\n\nAll normalized spec names must:\n• Use Title Case  \n• Avoid ALL CAPS  \n• Remove trailing punctuation  \n• Be concise and professional  \n\n\nOUTPUT FORMAT\n\nReturn ONLY valid JSON.\n\n{\n  \"mcat_id\": 2026,\n  \"mcat_name\": \"Category Name\",\n  \"normalized_custom_specs\": [\n    {\n      \"spec_name\": \"Normalized Spec Name\",\n      \"merged_from\": [\"Original Spec 1\", \"Original Spec 2\"]\n    }\n  ]\n}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -336,
+        128
+      ],
+      "id": "1b38ce39-c611-4f57-9ecb-2a73eb0f2f55",
+      "name": "AI Agent",
+      "retryOnFail": true,
+      "waitBetweenTries": 5000,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "9725ac5a-7230-4a3b-97da-fd45342f0be6",
+              "leftValue": "={{ $json.status }}",
+              "rightValue": "done",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -1648,
+        64
+      ],
+      "id": "c00fab2b-3cdb-43ec-a422-b8fe91b418a7",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1IsqLGo284dxdUihzWZBHddr6hb8zCukkUrpSDxhNwtg",
+          "mode": "list",
+          "cachedResultName": "manan spec",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1IsqLGo284dxdUihzWZBHddr6hb8zCukkUrpSDxhNwtg/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1916655179,
+          "mode": "list",
+          "cachedResultName": "Sheet2",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1IsqLGo284dxdUihzWZBHddr6hb8zCukkUrpSDxhNwtg/edit#gid=1916655179"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "mcat id": "={{ $json['Mcat Id'] }}",
+            "status": "done"
+          },
+          "matchingColumns": [
+            "mcat id"
+          ],
+          "schema": [
+            {
+              "id": "mcat id",
+              "displayName": "mcat id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "mcat name",
+              "displayName": "mcat name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2896,
+        -400
+      ],
+      "id": "c781baa9-21f7-4f4c-8a1c-bef15797a194",
+      "name": "Update row in sheet",
+      "retryOnFail": true,
+      "maxTries": 4,
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "w2cXsr3Q4muTWk3H",
+          "name": "Google Sheets account 257"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "e6f233bb-3be2-47f1-a0e0-7adf2a0c0f1b",
+              "leftValue": "={{ $json[\"Mcat Id\"] }}",
+              "rightValue": "ID_NOT_FOUND",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        2544,
+        -416
+      ],
+      "id": "62d9017b-ca52-4e56-a8a7-8d5be0f16ebf",
+      "name": "If1"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "seller api": {
+      "main": [
+        [
+          {
+            "node": "Spec URL",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Seller Specs": {
+      "main": [
+        [
+          {
+            "node": "Seller Specs Simplified",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Spec URL": {
+      "main": [
+        [
+          {
+            "node": "Seller Specs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript2": {
+      "main": [
+        []
+      ]
+    },
+    "Seller Specs Simplified": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript3": {
+      "main": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript4",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript4": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript8",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        []
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript5": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript6": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript7",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript7": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript8": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript6",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "seller api",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get row(s) in sheet1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "d59cafaa-a2ea-40cc-9903-45ea0893ca3b",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "17519d3ef9735db55aeaaca554134cc04945a8942840756f95f4251d52adf708"
+  },
+  "id": "EMIM58317SjD5r7A",
+  "tags": []
+}
