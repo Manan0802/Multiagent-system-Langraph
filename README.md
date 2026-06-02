@@ -87,57 +87,65 @@ flowchart TD
     classDef skipNode fill:#7F8C8D,stroke:#fff,stroke-width:2px,color:#fff,stroke-dasharray: 5 5;
     classDef activeNode fill:#2ECC71,stroke:#fff,stroke-width:2px,color:#fff;
 
-    StartNode([🚀 START]):::startEnd --> InitNode[orchestrator_init]:::initNode
+    StartNode([🚀 START]) --> InitNode[orchestrator_init]
     
-    InitNode --> FetchDS1[fetch_ds1 - Buyer Calls]:::workerNode
-    InitNode --> FetchDS2[fetch_ds2 - Custom Specs]:::workerNode
-    InitNode --> FetchDS3[fetch_ds3 - Search Intent]:::workerNode
-    InitNode --> FetchDS4[fetch_ds4 - Product Fill Rate]:::workerNode
-    InitNode --> FetchDS5[fetch_ds5 - Option Market Data]:::workerNode
+    InitNode --> FetchDS1[fetch_ds1 - Buyer Calls]
+    InitNode --> FetchDS2[fetch_ds2 - Custom Specs]
+    InitNode --> FetchDS3[fetch_ds3 - Search Intent]
+    InitNode --> FetchDS4[fetch_ds4 - Product Fill Rate]
+    InitNode --> FetchDS5[fetch_ds5 - Option Market Data]
     
-    FetchDS1 --> JoinNode[join_all_sources]:::initNode
+    FetchDS1 --> JoinNode[join_all_sources]
     FetchDS2 --> JoinNode
     FetchDS3 --> JoinNode
     FetchDS4 --> JoinNode
     FetchDS5 --> JoinNode
     
-    JoinNode --> MasterOrch[master_orchestrator]:::orchestratorNode
+    JoinNode --> MasterOrch[master_orchestrator]
     
     %% Master Orchestrator Router Gate 0
-    MasterOrch -->|Route Decision| Gate0Router{Gate 0: Web Search?}:::orchestratorNode
-    Gate0Router -->|run = true| Gate0Active[gate_0_web_search]:::activeNode
-    Gate0Router -->|run = false| Gate0Skip[skip_web_search]:::skipNode
+    MasterOrch -->|Route Decision| Gate0Router{Gate 0: Web Search?}
+    Gate0Router -->|run = true| Gate0Active[gate_0_web_search]
+    Gate0Router -->|run = false| Gate0Skip[skip_web_search]
     
     %% Gate 0b Routing
-    Gate0Active --> Gate0bRouter{Gate 0b: World Knowledge?}:::orchestratorNode
+    Gate0Active --> Gate0bRouter{Gate 0b: World Knowledge?}
     Gate0Skip --> Gate0bRouter
-    Gate0bRouter -->|run = true| Gate0bActive[gate_0b_world_knowledge]:::activeNode
-    Gate0bRouter -->|run = false| Gate0bSkip[skip_world_knowledge]:::skipNode
+    Gate0bRouter -->|run = true| Gate0bActive[gate_0b_world_knowledge]
+    Gate0bRouter -->|run = false| Gate0bSkip[skip_world_knowledge]
     
     %% Gate 1 Routing
-    Gate0bActive --> Gate1Router{Gate 1: Missing Spec?}:::orchestratorNode
+    Gate0bActive --> Gate1Router{Gate 1: Missing Spec?}
     Gate0bSkip --> Gate1Router
-    Gate1Router -->|run = true| Gate1Active[gate_1_missing_spec]:::activeNode
-    Gate1Router -->|run = false| Gate1Skip[skip_missing_spec]:::skipNode
+    Gate1Router -->|run = true| Gate1Active[gate_1_missing_spec]
+    Gate1Router -->|run = false| Gate1Skip[skip_missing_spec]
     
     %% Gate 2 Routing
-    Gate1Active --> Gate2Router{Gate 2: Spec Sequencing?}:::orchestratorNode
+    Gate1Active --> Gate2Router{Gate 2: Spec Sequencing?}
     Gate1Skip --> Gate2Router
-    Gate2Router -->|run = true| Gate2Active[gate_2_sequencing]:::activeNode
-    Gate2Router -->|run = false| Gate2Skip[skip_sequencing]:::skipNode
+    Gate2Router -->|run = true| Gate2Active[gate_2_sequencing]
+    Gate2Router -->|run = false| Gate2Skip[skip_sequencing]
     
     %% Gate 3 Routing
-    Gate2Active --> Gate3Router{Gate 3: Option Audit?}:::orchestratorNode
+    Gate2Active --> Gate3Router{Gate 3: Option Audit?}
     Gate2Skip --> Gate3Router
-    Gate3Router -->|run = true| Gate3Active[gate_3_option]:::activeNode
-    Gate3Router -->|run = false| Gate3Skip[skip_option]:::skipNode
+    Gate3Router -->|run = true| Gate3Active[gate_3_option]
+    Gate3Router -->|run = false| Gate3Skip[skip_option]
     
     %% Verification & Output
-    Gate3Active --> Gate4Verification[gate_4_post_audit_verification]:::activeNode
+    Gate3Active --> Gate4Verification[gate_4_post_audit_verification]
     Gate3Skip --> Gate4Verification
     
-    Gate4Verification --> Assembly[output_assembly]:::initNode
-    Assembly --> EndNode([🏁 END]):::startEnd
+    Gate4Verification --> Assembly[output_assembly]
+    Assembly --> EndNode([🏁 END])
+
+    %% Class Bindings
+    class StartNode,EndNode startEnd;
+    class InitNode,JoinNode,Assembly initNode;
+    class FetchDS1,FetchDS2,FetchDS3,FetchDS4,FetchDS5 workerNode;
+    class MasterOrch,Gate0Router,Gate0bRouter,Gate1Router,Gate2Router,Gate3Router orchestratorNode;
+    class Gate0Skip,Gate0bSkip,Gate1Skip,Gate2Skip,Gate3Skip skipNode;
+    class Gate0Active,Gate0bActive,Gate1Active,Gate2Active,Gate3Active,Gate4Verification activeNode;
 ```
 
 ### Internal Data & Caching Pipeline
@@ -149,19 +157,24 @@ flowchart LR
     classDef process fill:#3498db,stroke:#333,stroke-width:1px,color:#fff;
     classDef db fill:#27ae60,stroke:#333,stroke-width:1px,color:#fff;
 
-    GCS[GCS Bucket API - Token Auth]:::source -->|Presigned URL| DS0[DS0 Platform Baseline Loader]:::process
-    ISQ[Buyer ISQ REST Endpoint]:::source -->|Parse steps/step_11| DS1[DS1 Call Signal Aggregator]:::process
-    Sheet2[Google Sheet export?format=csv]:::source -->|pandas read_csv| DS2[DS2 Custom Spec Auditor]:::process
-    Sheet3[Google Sheet export?format=csv]:::source -->|pandas read_csv| DS3[DS3 Search Intent Analyst]:::process
-    Sheet4[Google Sheet export?format=csv]:::source -->|pandas read_csv| DS4[DS4 Product Fill Rate Ingest]:::process
-    Sheet5[Google Sheet export?format=csv]:::source -->|pandas read_csv| DS5[DS5 Option Market Ingest]:::process
+    GCS[GCS Bucket API - Token Auth] -->|Presigned URL| DS0[DS0 Platform Baseline Loader]
+    ISQ[Buyer ISQ REST Endpoint] -->|Parse steps/step_11| DS1[DS1 Call Signal Aggregator]
+    Sheet2[Google Sheet export?format=csv] -->|pandas read_csv| DS2[DS2 Custom Spec Auditor]
+    Sheet3[Google Sheet export?format=csv] -->|pandas read_csv| DS3[DS3 Search Intent Analyst]
+    Sheet4[Google Sheet export?format=csv] -->|pandas read_csv| DS4[DS4 Product Fill Rate Ingest]
+    Sheet5[Google Sheet export?format=csv] -->|pandas read_csv| DS5[DS5 Option Market Ingest]
 
-    DS0 -->|State dict| MemoryState[(OrchestratorState)]:::db
+    DS0 -->|State dict| MemoryState[(OrchestratorState)]
     DS1 -->|Product Count >= 2| MemoryState
     DS2 -->|Pre-LLM Count >= 5| MemoryState
     DS3 -->|Impressions > 50| MemoryState
     DS4 -->|Fill Rates| MemoryState
     DS5 -->|Option Frequency| MemoryState
+
+    %% Class Bindings
+    class GCS,ISQ,Sheet2,Sheet3,Sheet4,Sheet5 source;
+    class DS0,DS1,DS2,DS3,DS4,DS5 process;
+    class MemoryState db;
 ```
 
 ---
